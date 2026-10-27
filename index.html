@@ -227,7 +227,7 @@ body.thud #app{animation:thud .3s}
     </div>
     <div id="startWrap"><button class="btn big hide" id="start">クイズスタート！</button></div>
     <p class="small">音が出ます（右上でオフにできます）</p>
-    <p class="small" style="opacity:.55">ver. 2026-10-27 23:45（イシガキゲームズ版）</p>
+    <p class="small" style="opacity:.55">ver. 2026-10-27 23:55（答え非表示版）</p>
   </section>
 
   <!-- クイズ -->
@@ -506,7 +506,7 @@ function answer(orig, btn) {
   var box = $("opts"); box.classList.add("lock");
   Array.prototype.forEach.call(box.children, function (b) {
     var o = +b.dataset.orig;
-    if (o === correctIdx) b.classList.add("ok");
+    if (o === correctIdx && good) b.classList.add("ok");
     else if (b === btn) b.classList.add("ng");
     else b.classList.add("dim");
   });
@@ -514,8 +514,8 @@ function answer(orig, btn) {
   var fb = $("fb");
   fb.className = "fb show " + (good ? "ok" : "ng");
   $("fbh").textContent = good ? "⭕ 正解！" : "❌ ざんねん！";
-  var msg = isFinal ? (good ? d.okText : d.ngText) : (good ? d.ok : d.ng);
-  if (!good) msg += state.over ? "\n\n💔 4回まちがえたので、ゲームオーバー…" : "\n\n💔 のこり " + (MAX_MISS - state.miss) + " 回まで まちがえてOK";
+  var msg = good ? (isFinal ? d.okText : d.ok) : "";
+  if (!good) msg = state.over ? "💔 4回まちがえたので、ゲームオーバー…" : "💔 ライフが1つ減った！\nのこり " + (MAX_MISS - state.miss) + " 回まで まちがえてOK";
   $("fbt").textContent = msg; $("fbt").style.whiteSpace = "pre-line";
   if (good) { SFX.ok(); var r = btn.getBoundingClientRect(); confetti(40, r.left + r.width / 2, r.top, 7); } else SFX.ng();
   var nx = $("next");
