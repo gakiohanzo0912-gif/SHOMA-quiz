@@ -66,6 +66,13 @@ body{
 .qnum{font-family:var(--head);font-size:22px;color:var(--gold)}
 .qnum small{font-size:14px;color:var(--soft)}
 .score{font-size:14px;color:var(--soft)}
+.right{display:flex;align-items:center;gap:12px}
+.lives{font-size:20px;letter-spacing:2px;color:#ff4d6d;text-shadow:0 0 10px rgba(255,77,109,.6)}
+.lives i{font-style:normal;transition:.3s}
+.lives i.lost{color:rgba(255,255,255,.25);text-shadow:none;transform:scale(.8)}
+.lives.hit{animation:shake .45s}
+.livesnote{font-size:11px;color:var(--soft);margin:-6px 0 10px;text-align:right}
+.over{color:#ff5a6a}
 .score b{font-family:var(--head);font-weight:400;font-size:22px;color:#fff}
 .dots{display:flex;gap:5px;margin:0 0 14px}
 .dots i{flex:1;height:7px;border-radius:9px;background:rgba(255,255,255,.18);transition:.3s}
@@ -143,6 +150,7 @@ body{
 .ladder div.got::after{content:"GET!";margin-left:auto;font-family:var(--head);color:var(--gold);font-size:14px}
 .review{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 18px}
 .review i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-size:14px;font-weight:900}
+.review i.na{background:rgba(255,255,255,.12);color:rgba(255,255,255,.4)}
 .review i.ok{background:var(--ok);color:#04301f} .review i.ng{background:var(--ng);color:#fff}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
@@ -172,7 +180,8 @@ body{
 
   <!-- クイズ -->
   <section id="quiz" class="screen">
-    <div class="hud"><div class="qnum" id="qnum"></div><div class="score">せいかい <b id="score">0</b></div></div>
+    <div class="hud"><div class="qnum" id="qnum"></div><div class="right"><div class="lives" id="lives" title="まちがえていい回数"></div><div class="score">せいかい <b id="score">0</b></div></div></div>
+    <div class="livesnote">♥ = あと何回まちがえてもOK（4回まちがえるとゲームオーバー）</div>
     <div class="dots" id="dots"></div>
     <div class="card">
       <p class="qtext" id="qtext"></p>
@@ -189,14 +198,14 @@ body{
 
   <!-- 結果 -->
   <section id="result" class="screen">
-    <p class="rtitle">FINAL SCORE</p>
+    <p class="rtitle" id="rtitle">FINAL SCORE</p>
     <div class="big-score"><span id="rscore">0</span><small> / 10</small></div>
     <p class="verdict" id="verdict"></p>
     <div class="prizebox" id="prizebox"><span class="lbl">YOUR PRIZE</span><span class="emo" id="pemo"></span><div class="name" id="pname"></div><div class="desc" id="pdesc"></div></div>
     <div class="ladder" id="ladder"></div>
     <div class="review" id="review"></div>
     <button class="btn big" id="again" style="animation:none">もう一回あそぶ</button>
-    <p class="small">おたんじょうび おめでとう 翔馬！ 🎂</p>
+    <p class="small">翔馬、35歳 おたんじょうび おめでとう！ 🎂</p>
   </section>
 </main>
 
@@ -224,18 +233,18 @@ body{
 var Q = [
   { q: "第1問　松本翔馬の名前の漢字は？", sub: "似ているものばかり…よ〜く見て！",
     opts: ["翔馬", "翊馬", "翔鳥", "翔駒"], ans: 0, big: true,
-    ok: "自分の名前くらいは、ちゃんとわかってた。さすが主役！",
-    ng: "正解は「翔馬」。似た漢字に惑わされた…名前を間違えられる気持ち、わかった？" },
+    ok: "正解！松本翔馬の漢字は「翔馬」。",
+    ng: "正解は「翔馬」。似た漢字ばかりで難しかった！" },
 
-  { q: "第2問　翔馬の誕生日は？", sub: "今日の主役ですよ！",
+  { q: "第2問　翔馬の誕生日は？", sub: "ズバリ、何年何月何日？",
     opts: ["1991年9月22日", "1991年9月23日", "1991年9月21日", "1990年9月22日"], ans: 0,
     ok: "正解！1991年9月22日生まれ。今年で35歳！",
-    ng: "正解は1991年9月22日。友達の誕生日は覚えておこう！" },
+    ng: "正解は1991年9月22日。" },
 
   { q: "第3問　翔馬が11月に返す約束のお金は？", sub: "「11月って言ったの覚えてない？」",
     opts: ["5,000円", "8,000円", "10,000円", "12,000円"], ans: 1,
-    ok: "正解！8,000円。…ちゃんと返してね。",
-    ng: "正解は8,000円。返済予定はちゃんと覚えておこう。" },
+    ok: "正解！8,000円。",
+    ng: "正解は8,000円。11月に返す約束だった。" },
 
   { q: "第4問　翔馬が乗り打ちで当てたあと、なぜか怒っていた。その理由は？", sub: "みんなで出し合ったお金で打ったのに…",
     opts: ["「ありがとう」と言われなかったから", "取り分が少なかったから", "ビールがぬるかったから", "「勝ちすぎ」と言われたから"], ans: 0,
@@ -250,7 +259,7 @@ var Q = [
   { q: "第6問　キャバクラの支払いで、翔馬が出した衝撃のものは？", sub: "お会計の瞬間、店員さんも固まった。",
     opts: ["お年玉袋", "1円玉の山", "「ツケで」と書いた手書きの紙", "ママのクレジットカード"], ans: 0,
     ok: "正解！支払いに出てきたのは、お年玉袋。衝撃の35歳。",
-    ng: "正解はお年玉袋。35歳が出す会計の方法じゃない。" },
+    ng: "正解はお年玉袋。35歳の会計とは思えない。" },
 
   { q: "第7問　翔馬の「悪行」でないものはどれ？", sub: "（ヒント：いままでの行いを思い出して…）",
     opts: ["恫喝", "バックレ", "不潔", "夜逃げ", "この中にはない"], ans: 4, fixed: true,
@@ -290,7 +299,8 @@ var PRIZES = [
 
 /* ============================================================ */
 var $ = function (id) { return document.getElementById(id); };
-var state = { i: 0, score: 0, results: [], locked: false, soundOn: true };
+var MAX_MISS = 3;   // まちがえていい回数(4回目でゲームオーバー)
+var state = { i: 0, score: 0, miss: 0, over: false, results: [], locked: false, soundOn: true };
 
 /* ---------- 音(WebAudio。ファイル不要) ---------- */
 var AC = null;
@@ -384,6 +394,12 @@ function buildDots() {
   var d = $("dots"); d.innerHTML = "";
   for (var k = 0; k < Q.length + 1; k++) d.appendChild(document.createElement("i"));
 }
+function paintLives(hit) {
+  var h = "", left = Math.max(0, MAX_MISS - state.miss);
+  for (var k = 0; k < MAX_MISS; k++) h += "<i" + (k < left ? "" : " class=\"lost\"") + ">" + (k < left ? "♥" : "♡") + "</i>";
+  var el = $("lives"); el.innerHTML = h;
+  if (hit) { el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
+}
 function paintDots() {
   var d = $("dots").children;
   for (var k = 0; k < d.length; k++) {
@@ -393,7 +409,7 @@ function paintDots() {
 
 function start() {
   ac(); SFX.start();
-  state.i = 0; state.score = 0; state.results = [];
+  state.i = 0; state.score = 0; state.miss = 0; state.over = false; state.results = [];
   buildDots(); show("quiz"); renderQ();
 }
 
@@ -405,7 +421,7 @@ function renderQ() {
   $("qtext").textContent = d.q.replace(/^第\d+問　/, "");
   $("qsub").textContent = d.sub || "";
   $("fb").className = "fb"; $("next").className = "btn next";
-  paintDots();
+  paintDots(); paintLives();
 
   var order = d.opts.map(function (_, k) { return k; });
   if (!isFinal && !d.fixed) order = shuffle(order);
@@ -432,8 +448,9 @@ function answer(orig, btn) {
   var isFinal = state.i >= Q.length, d = isFinal ? FINAL : Q[state.i];
   var correctIdx = isFinal ? d.correct : d.ans, good = orig === correctIdx;
   state.results[state.i] = good;
-  if (good) state.score++;
+  if (good) state.score++; else { state.miss++; if (state.miss > MAX_MISS) state.over = true; }
   $("score").textContent = state.score;
+  paintLives(!good);
   var box = $("opts"); box.classList.add("lock");
   Array.prototype.forEach.call(box.children, function (b) {
     var o = +b.dataset.orig;
@@ -445,14 +462,16 @@ function answer(orig, btn) {
   var fb = $("fb");
   fb.className = "fb show " + (good ? "ok" : "ng");
   $("fbh").textContent = good ? "⭕ 正解！" : "❌ ざんねん！";
-  $("fbt").textContent = isFinal ? (good ? d.okText : d.ngText) : (good ? d.ok : d.ng);
+  var msg = isFinal ? (good ? d.okText : d.ngText) : (good ? d.ok : d.ng);
+  if (!good) msg += state.over ? "\n\n💔 4回まちがえたので、ゲームオーバー…" : "\n\n💔 のこり " + (MAX_MISS - state.miss) + " 回まで まちがえてOK";
+  $("fbt").textContent = msg; $("fbt").style.whiteSpace = "pre-line";
   if (good) { SFX.ok(); var r = btn.getBoundingClientRect(); confetti(40, r.left + r.width / 2, r.top, 7); } else SFX.ng();
   var nx = $("next");
   if (isFinal) {
     nx.textContent = "けっか発表へ ▶";
     startReveal(function () { nx.className = "btn next show"; });
   } else {
-    nx.textContent = state.i === Q.length - 1 ? "最終問題へ ▶" : "つぎへ ▶";
+    nx.textContent = state.over ? "けっか発表へ ▶" : state.i === Q.length - 1 ? "最終問題へ ▶" : "つぎへ ▶";
     nx.className = "btn next show";
     setTimeout(function () { nx.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 250);
   }
@@ -460,7 +479,7 @@ function answer(orig, btn) {
 
 $("next").addEventListener("click", function () {
   SFX.tap();
-  if (state.i >= Q.length) { finish(); return; }
+  if (state.over || state.i >= Q.length) { finish(); return; }
   state.i++;
   if (state.i === Q.length) { openGate(); return; }
   renderQ();
@@ -538,7 +557,10 @@ function finish() {
   var s = state.score, p = PRIZES.filter(function (x) { return s >= x.min; })[0];
   show("result");
   $("rscore").textContent = "0";
-  $("verdict").textContent = s === 10 ? "完全制覇！翔馬を知り尽くした男（女）！" : s >= 7 ? "かなりの翔馬通！" : s >= 5 ? "まあまあ翔馬を知ってる" : "翔馬のこと、もっと知ってあげて…";
+  $("rtitle").textContent = state.over ? "GAME OVER" : "FINAL SCORE";
+  $("rtitle").classList.toggle("over", state.over);
+  var base = s === 10 ? "完全制覇！翔馬を知り尽くした男（女）！" : s >= 7 ? "かなりの翔馬通！" : s >= 5 ? "まあまあ翔馬を知ってる" : "翔馬のこと、もっと知ってあげて…";
+  $("verdict").textContent = state.over ? "4回まちがえて、ここでゲームオーバー。ここまでの正解数で景品が決まります。" : base;
   var box = $("prizebox"); box.className = "prizebox" + (p.min === 0 ? " none" : "");
   $("pemo").textContent = p.emo; $("pname").textContent = p.name; $("pdesc").textContent = p.desc;
   var lad = $("ladder"); lad.innerHTML = "";
@@ -547,7 +569,7 @@ function finish() {
     d.innerHTML = "<span>" + x.emo + "</span><b>" + x.min + "問〜</b>" + x.name; lad.appendChild(d);
   });
   var rv = $("review"); rv.innerHTML = "";
-  state.results.forEach(function (r, k) { var i = document.createElement("i"); i.className = r ? "ok" : "ng"; i.textContent = k + 1 > 10 ? "F" : (k + 1); rv.appendChild(i); });
+  for (var k = 0; k < Q.length + 1; k++) { var r = state.results[k], i = document.createElement("i"); i.className = r === true ? "ok" : r === false ? "ng" : "na"; i.textContent = k + 1; rv.appendChild(i); }
   var n = 0; (function count() {
     $("rscore").textContent = n; if (n < s) { n++; SFX.tick(); setTimeout(count, 150); } else celebrate(s);
   })();
