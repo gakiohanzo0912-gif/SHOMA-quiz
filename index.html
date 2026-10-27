@@ -95,6 +95,7 @@ body{
 .opt.dim{opacity:.45}
 .opt.ok::before,.opt.ng::before{background:#fff}
 .opts.lock .opt{pointer-events:none}
+.opt.sel{background:linear-gradient(180deg,#ffe98a,#f5a623);color:#3a1200;border-color:#fff}
 @keyframes pop{40%{transform:scale(1.05)}}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .fb{margin-top:14px;border-radius:16px;padding:14px;font-size:16px;line-height:1.6;display:none}
@@ -227,7 +228,7 @@ body.thud #app{animation:thud .3s}
     </div>
     <div id="startWrap"><button class="btn big hide" id="start">クイズスタート！</button></div>
     <p class="small">音が出ます（右上でオフにできます）</p>
-    <p class="small" style="opacity:.55">ver. 2026-10-28 00:15（問1修正版）</p>
+    <p class="small" style="opacity:.55">ver. 2026-10-28 00:30（最終問題修正版）</p>
   </section>
 
   <!-- クイズ -->
@@ -334,7 +335,7 @@ var FINAL = {
   q: "最終問題　この翔馬、鼻毛は出てる？", sub: "答えたあと、モザイクがゆっくり消えていきます…",
   opts: ["出てる", "出てない", "鼻水が出てる", "鼻くそが見える"],
   correct: 3,                                  // ← 正解の番号(0はじまり)。0=出てる 1=出てない 2=鼻水 3=鼻くそ
-  okText: "正解！鼻くそが見える！モザイクの下の真実は、その目で確かめて！",
+  okText: "正解！鼻くそが見える！モザイクの下の真実は、いま見たとおり！",
   ngText: "残念！正解は「鼻くそが見える」。モザイクが消えていく…さあ、自分の目で確かめよう。",
   img: "assets/shoma-nose.jpg",
   view: { y0: 0.26, y1: 0.70 },                // 写真のうち、画面に出す範囲(縦の割合)
@@ -499,6 +500,32 @@ function answer(orig, btn) {
   state.locked = true; ac();
   var isFinal = state.i >= Q.length, d = isFinal ? FINAL : Q[state.i];
   var correctIdx = isFinal ? d.correct : d.ans, good = orig === correctIdx;
+  if (isFinal) {
+    // 最終問題: モザイクが消えきるまで、正解かどうかは見せない
+    $("opts").classList.add("lock");
+    Array.prototype.forEach.call($("opts").children, function (b) { b.classList.add(b === btn ? "sel" : "dim"); });
+    SFX.tap();
+    var f1 = $("fb"); f1.className = "fb show"; $("fbh").textContent = "👀 モザイク解除中…"; $("fbt").textContent = "しっかり見て…"; $("fbt").style.whiteSpace = "pre-line";
+    startReveal(function () {
+      if (good) { state.score++; state.results[state.i] = true; }
+      else { state.miss++; state.results[state.i] = false; }
+      $("score").textContent = state.score; paintLives(!good);
+      Array.prototype.forEach.call($("opts").children, function (b) {
+        b.classList.remove("sel", "dim");
+        if (+b.dataset.orig === correctIdx && good) b.classList.add("ok");
+        else if (b === btn) b.classList.add("ng");
+        else b.classList.add("dim");
+      });
+      paintDots();
+      $("fb").className = "fb show " + (good ? "ok" : "ng");
+      $("fbh").textContent = good ? "⭕ 正解！" : "❌ ざんねん！";
+      $("fbt").textContent = good ? d.okText : "残念！モザイクの下の真実は、いま見たとおり…";
+      if (good) { SFX.ok(); var r = btn.getBoundingClientRect(); confetti(60, r.left + r.width / 2, r.top, 9); } else SFX.ng();
+      var nx = $("next"); nx.textContent = "けっか発表へ ▶"; nx.className = "btn next show";
+      setTimeout(function () { nx.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 250);
+    });
+    return;
+  }
   if (good) { state.score++; state.results[state.i] = true; }
   else { state.miss++; if (state.miss > MAX_MISS) state.over = true; if (state.results[state.i] == null) state.results[state.i] = false; }
   $("score").textContent = state.score;
