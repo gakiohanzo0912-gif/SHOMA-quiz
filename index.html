@@ -228,7 +228,7 @@ body.thud #app{animation:thud .3s}
     </div>
     <div id="startWrap"><button class="btn big hide" id="start">クイズスタート！</button></div>
     <p class="small">音が出ます（右上でオフにできます）</p>
-    <p class="small" style="opacity:.55">ver. 2026-10-28 09:40（伝説ネタ版）</p>
+    <p class="small" style="opacity:.55">ver. 2026-10-28 10:00（10問・ネタ全部入り版）</p>
   </section>
 
   <!-- クイズ -->
@@ -309,25 +309,30 @@ var Q = [
     ok: "正解！6,000円とタバコ1箱。いつの間にか交渉成立した気になっていた。",
     ng: "正解は「6,000円とタバコ1箱」。" },
 
-  { q: "第6問　Instagramに「気合い入れ直します🔥」と投稿した翌日、12時まで爆睡した翔馬。「何について気合い入れ直したの？」と聞かれた答えは？", sub: "気合いは入り直したのか…？",
-    opts: ["「普段について気合い入れ直した」", "「仕事について気合い入れ直した」", "「体型について気合い入れ直した」", "「禁煙について気合い入れ直した」"], ans: 0,
-    ok: "正解！「普段について」。ふわっとしすぎ。そして12時まで爆睡。",
-    ng: "正解は「普段について気合い入れ直した」。" },
-
-  { q: "第7問　ナンパした女の子と席についた翔馬。自己紹介で趣味を「アウトドア！」と言ったあと、出会って数分の女の子を何に誘った？", sub: "女の子は困惑。友達が助け舟を出した。",
+  { q: "第6問　ナンパした女の子と席についた翔馬。自己紹介で趣味を「アウトドア！」と言ったあと、出会って数分の女の子を何に誘った？", sub: "女の子は困惑。友達が助け舟を出した。",
     opts: ["BBQ", "キャンプ", "釣り", "ドライブ"], ans: 0,
     ok: "正解！「今度BBQ行こうよ！」。友達の「出会って数分でなんでBBQ行くんだよ」で助け舟が出た。",
     ng: "正解はBBQ。" },
 
-  { q: "第8問　相席屋でタイプじゃない女の子を撒くとき、翔馬が言った「もう終電だから帰らないと」。そのときの時刻は？", sub: "終電にしては…早すぎる。",
+  { q: "第7問　相席屋でタイプじゃない女の子を撒くとき、翔馬が言った「もう終電だから帰らないと」。そのときの時刻は？", sub: "終電にしては…早すぎる。",
     opts: ["夜の9時", "夜の11時", "夜の12時", "夜の10時30分"], ans: 0,
     ok: "正解！時刻は夜の9時。終電にはまだまだ早い。",
     ng: "正解は夜の9時。" },
 
-  { q: "第9問　旅行の車の運転を頑なに拒む翔馬。「人が150km運転するのは気にしない」けど、自分が運転してもいいと主張した距離は？", sub: "150kmと比べると…",
+  { q: "第8問　旅行の車の運転を頑なに拒む翔馬。「人が150km運転するのは気にしない」けど、自分が運転してもいいと主張した距離は？", sub: "150kmと比べると…",
     opts: ["50km", "30km", "80km", "100km"], ans: 0, fixed: false,
     ok: "正解！自分は50kmと主張。人には150km運転させるのに。",
     ng: "正解は50km。" },
+
+  { q: "第9問　翔馬の自転車泥棒がバレた。責められた翔馬が、強引に話を終わらせようとして言った一言は？", sub: "このあと警察が絡んでいると分かり、逃亡・音信不通になる。",
+    opts: ["「返したからこの話はおしまいだ」", "「借りただけだよ」", "「雄大もやってた」", "「ちょっと覚えてない」"], ans: 0,
+    ok: "正解！「返したからこの話はおしまいだ」。そのあと警察が絡んでると知って「警察になんか捕まりたくないよ」と逃亡した。",
+    ng: "正解は「返したからこの話はおしまいだ」。" },
+
+  { q: "第10問　友達から、みんなで遊ぶ用のお金を3万円借りた翔馬。余ったお金を頑なに返さず、翌日に言い出したことは？", sub: "返す気は、ゼロ。",
+    opts: ["一人で焼き鳥に行って、風俗に行く", "余りで友達みんなに奢る", "余ったお金で貯金する", "全額そっと返しに行く"], ans: 0,
+    ok: "正解！一人で焼き鳥に行って、風俗に行く。みんなのお金だったのに。",
+    ng: "正解は「一人で焼き鳥に行って、風俗に行く」。" },
 ];
 
 /* 最終問題(写真に簡易モザイク → ゆっくり解除) */
@@ -445,7 +450,7 @@ function shuffle(a) {
 }
 function buildDots() {
   var d = $("dots"); d.innerHTML = "";
-  for (var k = 0; k < Q.length + 1; k++) d.appendChild(document.createElement("i"));
+  for (var k = 0; k < Q.length; k++) d.appendChild(document.createElement("i"));
 }
 function paintLives(hit) {
   var h = "", left = Math.max(0, MAX_MISS - state.miss);
@@ -467,9 +472,9 @@ function start() {
 }
 
 function renderQ() {
-  var total = Q.length + 1, isFinal = state.i >= Q.length, d = isFinal ? FINAL : Q[state.i];
+  var total = Q.length, isFinal = false, d = isFinal ? FINAL : Q[state.i];
   state.locked = false;
-  $("qnum").innerHTML = (isFinal ? "FINAL" : "Q" + (state.i + 1)) + " <small>/ " + total + "</small>";
+  $("qnum").innerHTML = "Q" + (state.i + 1) + " <small>/ " + total + "</small>";
   $("score").textContent = state.score;
   $("qtext").textContent = d.q.replace(/^第\d+問　/, "");
   $("qsub").textContent = d.sub || "";
@@ -498,7 +503,7 @@ function renderQ() {
 function answer(orig, btn) {
   if (state.locked || btn.classList.contains("ng")) return;
   state.locked = true; ac();
-  var isFinal = state.i >= Q.length, d = isFinal ? FINAL : Q[state.i];
+  var isFinal = false, d = Q[state.i];
   var correctIdx = isFinal ? d.correct : d.ans, good = orig === correctIdx;
   if (isFinal) {
     // 最終問題: モザイクが消えきるまで、正解かどうかは見せない
@@ -561,7 +566,7 @@ function answer(orig, btn) {
     nx.textContent = "けっか発表へ ▶";
     startReveal(function () { nx.className = "btn next show"; });
   } else {
-    nx.textContent = state.over ? "けっか発表へ ▶" : state.i === Q.length - 1 ? "最終問題へ ▶" : "つぎへ ▶";
+    nx.textContent = state.over ? "けっか発表へ ▶" : state.i === Q.length - 1 ? "けっか発表へ ▶" : state.i === Q.length - 2 ? "最終問題へ ▶" : "つぎへ ▶";
     nx.className = "btn next show";
     setTimeout(function () { nx.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 250);
   }
@@ -569,9 +574,9 @@ function answer(orig, btn) {
 
 $("next").addEventListener("click", function () {
   SFX.tap();
-  if (state.over || state.i >= Q.length) { finish(); return; }
+  if (state.over || state.i >= Q.length - 1) { finish(); return; }
   state.i++;
-  if (state.i === Q.length) { openGate(); return; }
+  if (state.i === Q.length - 1) { openGate(); return; }
   renderQ();
 });
 
@@ -659,7 +664,7 @@ function finish() {
     d.innerHTML = "<span>" + x.emo + "</span><b>" + x.min + "問〜</b>" + x.name; lad.appendChild(d);
   });
   var rv = $("review"); rv.innerHTML = "";
-  for (var k = 0; k < Q.length + 1; k++) { var r = state.results[k], i = document.createElement("i"); i.className = r === true ? "ok" : r === false ? "ng" : "na"; i.textContent = k + 1; rv.appendChild(i); }
+  for (var k = 0; k < Q.length; k++) { var r = state.results[k], i = document.createElement("i"); i.className = r === true ? "ok" : r === false ? "ng" : "na"; i.textContent = k + 1; rv.appendChild(i); }
   var n = 0; (function count() {
     $("rscore").textContent = n; if (n < s) { n++; SFX.tick(); setTimeout(count, 150); } else celebrate(s);
   })();
